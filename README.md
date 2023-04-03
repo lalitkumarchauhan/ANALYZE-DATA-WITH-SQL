@@ -1,2 +1,2 @@
-# SQL_code
+# ANALYZE DATA WITH SQL
 Code_academy_2023
