@@ -1,0 +1,28 @@
+select * from places;
+
+select * from reviews;
+
+select name from places where price_point <= 20;
+places.id and reviews.place_id
+
+select * from places inner join reviews on places.id =reviews.place_id where total_reviews >=1;
+
+select places.name, places.average_rating, reviews.username, reviews.rating, 
+reviews.review_date, reviews.note 
+from places 
+inner join reviews 
+on places.id = reviews.place_id;
+
+select places.name, places.average_rating, reviews.username, reviews.rating, 
+reviews.review_date, reviews.note 
+from places 
+left join reviews 
+on places.id = reviews.place_id;
+select places.id, places.name from places left join reviews on places.id = reviews.place_id where reviews.place_id is null;
+
+with old_20_rev as (
+select place_id, strftime('%Y', review_date) as rev_yr from reviews where rev_yr = '2020')
+select * from old_20_rev join places on old_20_rev.place_id = places.id;
+
+select reviews.username, count(reviews.rating) as c from reviews inner join places on reviews.place_id = places.id 
+where reviews.rating < places.average_rating group by reviews.username order by c desc limit 1;
