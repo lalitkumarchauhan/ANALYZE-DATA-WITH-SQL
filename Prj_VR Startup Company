@@ -1,0 +1,31 @@
+select * from employees;
+
+select * from projects;
+
+--Two above tables can be joined on employess.current_project with projects.project_id
+
+select first_name, last_name from employees where current_project is null;
+
+select project_name from projects where project_id not in (select current_project from employees where current_project is not null);
+
+with project as (select current_project, count(current_project) as cnt from employees group by current_project order by cnt desc limit 1)
+select projects.project_name from project left join projects on project.current_project = projects.project_id;
+
+SELECT project_name
+FROM projects
+INNER JOIN employees 
+  ON projects.project_id = employees.current_project
+WHERE current_project IS NOT NULL
+GROUP BY current_project
+HAVING COUNT(current_project) > 1;
+
+select (count(*)*2)-(select count(*) from employees where current_project is not null and  position = 'Developer') as cont from projects;
+
+select personality, count(personality) as cnt_p from employees group by personality order by cnt_p desc limit 1;
+
+SELECT project_name FROM projects INNER JOIN employees ON projects.project_id = employees.current_project 
+WHERE personality = ( SELECT personality FROM employees GROUP BY personality ORDER BY COUNT(personality) DESC LIMIT 1);
+
+select e.first_name, e.last_name, e.personality, p.project_name from projects p inner join employees e 
+ON p.project_id = e.current_project WHERE personality = ( SELECT personality FROM employees WHERE current_project IS NOT NULL 
+GROUP BY personality ORDER BY COUNT(personality) DESC LIMIT 1);
