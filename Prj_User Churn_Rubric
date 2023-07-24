@@ -24,3 +24,71 @@ of slides you’ll want to use.
 Rubric: You can share your work with your peers on Codecademy, who can give you feedback based on this rubric. 
 Make sure to check your work before submitting!
 
+select * from subscriptions limit 100;
+select distinct segment from subscriptions;
+-- two different segments with 30 and 87 values are present in the data snap
+select distinct strftime('%m', subscription_start) from subscriptions;
+--there are four different month present in the data
+select distinct strftime('%m', subscription_end) from subscriptions;
+---There are four different months present in the data including null value
+-- we can calculate the churn for three months since there are no subscription_end for the month of December, 2016.
+with months as
+(
+select 
+'2017-01-01' as first_day
+'2017-01-31' as last_day
+union
+'2017-02-01' as first_day
+'2017-02-28' as last_day
+union
+'2017-03-01' as first_day
+'2017-03-31' as last_day
+),
+cross_join as 
+(select * from subscriptions 
+cross join months), 
+status as 
+(
+select id, first_day as 'month',
+case
+when (subscription_start < first_day)
+AND (
+      subscription_end > first_day
+      OR subscription_end IS NULL)
+and (segment = 87) then 1
+else 0
+end as is_active_87,
+case
+when (subscription_start < first_day)
+AND (
+      subscription_end > first_day
+      OR subscription_end IS NULL) 
+      and (segment = 30) then 1
+else 0
+end as is_active_30,
+CASE
+ WHEN (subscription_end BETWEEN first_day AND last_day)
+    AND (segment = 87) THEN 1
+  ELSE 0
+END as is_canceled_87,
+CASE
+  WHEN (subscription_end BETWEEN first_day AND last_day)
+    AND (segment = 30) THEN 1
+  ELSE 0
+END as is_canceled_30
+FROM cross_join
+)
+status_aggregate AS
+(SELECT month,
+ SUM(is_active_87) as sum_active_87,
+ SUM(is_active_30) as sum_active_30,
+ SUM(is_canceled_87) as sum_canceled_87,
+ SUM(is_canceled_30) as sum_canceled_30
+ FROM status
+ GROUP BY 1
+)
+SELECT month, 
+1.0 * status_aggregate.sum_canceled_87 / status_aggregate.sum_active_87 AS churn_rate_87,
+1.0 * status_aggregate.sum_canceled_30 / status_aggregate.sum_active_30 AS churn_rate_30
+FROM status_aggregate
+GROUP BY 1;
